@@ -38,22 +38,9 @@
 		B8B820AB2F33D0D600F49ECE /* WTMUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WTMUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B80F57F82F37D4D200B00183 /* Exceptions for "WTM" folder in "WTM" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = B8B820912F33D0D500F49ECE /* WTM */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B8B820942F33D0D500F49ECE /* WTM */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				B80F57F82F37D4D200B00183 /* Exceptions for "WTM" folder in "WTM" target */,
-			);
 			path = WTM;
 			sourceTree = "<group>";
 		};

@@ -119,7 +119,7 @@ struct WelcomeScreen: View {
                             .opacity(isAnimating ? 1 : 0)
                             .offset(y: isAnimating ? 0 : 30)
 
-                        Text("What's the move tonight!")
+                        Text("Tonight Starts here!")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .foregroundStyle(.white.opacity(0.92))
