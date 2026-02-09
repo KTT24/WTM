@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WTM | What's The Move</title>
+    <meta
+      name="description"
+      content="WTM helps you discover where the vibe is tonight, see live events, and pull friends into the plan."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+      <div class="grain"></div>
+    </div>
+
+    <header class="nav-shell reveal">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <p class="brand-top">WTM</p>
+          <p class="brand-bottom">What's The Move</p>
+        </div>
+      </div>
+      <nav class="nav-actions">
+        <a href="./features.html">Features</a>
+        <a href="./experience.html">Experience</a>
+        <a href="./join.html">Join</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="hero reveal">
+        <p class="kicker">Tonight starts here</p>
+        <h1>Find the move. Start the party. Bring everyone in.</h1>
+        <p class="hero-copy">
+          WTM gives you a live pulse of nearby bars, active events, and where your crew is heading next.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="./join.html">Get The App</a>
+          <a class="btn btn-secondary" href="./experience.html">See Live Preview</a>
+        </div>
+      </section>
+
+      <section class="phone-stage reveal" id="experience" aria-label="App preview">
+        <div class="phone-shell">
+          <div class="phone-top">
+            <div>
+              <p class="mini-label">WTM</p>
+              <p class="mini-title">What's the move tonight?</p>
+            </div>
+            <span class="live-pill">LIVE</span>
+          </div>
+
+          <article class="glass-card">
+            <div class="card-head">
+              <h2>Nearby Hotspots</h2>
+              <p>Updated now</p>
+            </div>
+            <div class="hotspot-row">
+              <div class="dot dot-hot"></div>
+              <div>
+                <p class="spot-name">Electric Room</p>
+                <p class="spot-sub">Crowd climbing fast</p>
+              </div>
+              <span class="tag">+32</span>
+            </div>
+            <div class="hotspot-row">
+              <div class="dot dot-mid"></div>
+              <div>
+                <p class="spot-name">Skyline Social</p>
+                <p class="spot-sub">Steady turnout</p>
+              </div>
+              <span class="tag">+14</span>
+            </div>
+            <div class="hotspot-row">
+              <div class="dot dot-low"></div>
+              <div>
+                <p class="spot-name">After Hours</p>
+                <p class="spot-sub">Getting started</p>
+              </div>
+              <span class="tag">+6</span>
+            </div>
+          </article>
+
+          <article class="event-card">
+            <p class="event-kicker">ACTIVE NOW</p>
+            <h3>Rooftop Session</h3>
+            <p class="event-sub">Join before the line builds up.</p>
+            <button class="join-btn">I'm Going</button>
+          </article>
+
+          <div class="tab-bar">
+            <button class="tab">Map</button>
+            <button class="tab">Events</button>
+            <button class="tab tab-add">+</button>
+            <button class="tab">Chats</button>
+            <button class="tab">Me</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="features reveal" id="features">
+        <article class="feature">
+          <p class="feature-tag">Map Pulse</p>
+          <h4>See where the energy is climbing in real time.</h4>
+        </article>
+        <article class="feature">
+          <p class="feature-tag">Events Feed</p>
+          <h4>Discover active and upcoming parties near you.</h4>
+        </article>
+        <article class="feature">
+          <p class="feature-tag">Crew Mode</p>
+          <h4>Share plans fast and keep your group synced.</h4>
+        </article>
+        <a class="feature-link" href="./features.html">Explore all features</a>
+      </section>
+
+      <section class="join reveal" id="join">
+        <h5>WTM is built for the nights you don't want to miss.</h5>
+        <a class="btn btn-primary" href="./join.html">Join Waitlist</a>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

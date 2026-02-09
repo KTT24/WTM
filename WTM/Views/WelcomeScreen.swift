@@ -7,6 +7,14 @@ import SwiftUI
 import Supabase
 
 struct WelcomeScreen: View {
+    private enum InputField {
+        case email
+        case password
+        case username
+        case phone
+        case otp
+    }
+
     private enum AuthMode {
         case signIn
         case signUp
@@ -72,81 +80,58 @@ struct WelcomeScreen: View {
     @State private var errorMessage: String?
     @State private var otpSent = false
     @State private var showConfetti = false
+    @FocusState private var focusedField: InputField?
 
     @AppStorage("isLoggedIn") private var isLoggedIn = false
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [Color.mint.opacity(0.9), Color.accent.opacity(0.85)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            let collapsedHeader = step != .chooseMode
+            AnimatedMeshBackground()
 
             VStack(spacing: 22) {
-                Spacer()
+                if step == .chooseMode {
+                    Spacer()
 
-                ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.4))
-                        .frame(width: 220, height: 220)
-                        .scaleEffect(
-                            spinComplete
-                            ? (isAnimating ? (collapsedHeader ? 0.72 : 1.12) : (collapsedHeader ? 0.64 : 0.95))
-                            : (collapsedHeader ? 0.6 : 0.85)
-                        )
-                        .opacity(spinComplete ? (isAnimating ? 0.7 : 0.3) : 0.0)
-                        .blur(radius: spinComplete ? (isAnimating ? 18 : 8) : 0)
-                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
+                    ZStack {
+                        Circle()
+                            .fill(.white.opacity(0.35))
+                            .frame(width: 220, height: 220)
+                            .scaleEffect(spinComplete ? (isAnimating ? 1.12 : 0.95) : 0.85)
+                            .opacity(spinComplete ? (isAnimating ? 0.7 : 0.3) : 0.0)
+                            .blur(radius: spinComplete ? (isAnimating ? 18 : 8) : 0)
+                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
 
-                    Image(systemName: "wineglass.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 120, height: 120)
-                        .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
-                        .scaleEffect(isAnimating ? (collapsedHeader ? 0.7 : 1.0) : 0.1)
-                        .rotationEffect(.degrees(isAnimating ? 360 : 0))
-                }
-                .offset(y: collapsedHeader ? -60 : 0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.85), value: collapsedHeader)
-                .onAppear {
-                    withAnimation {
-                        isAnimating = true
+                        Image(systemName: "wineglass.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 120, height: 120)
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
+                            .scaleEffect(isAnimating ? 1.0 : 0.1)
+                            .rotationEffect(.degrees(isAnimating ? 360 : 0))
                     }
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
-                        spinComplete = true
-                        isAnimating = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            isAnimating = true
-                        }
+                    VStack(spacing: 8) {
+                        Text("WTM")
+                            .font(.system(.largeTitle, design: .default, weight: .black))
+                            .foregroundStyle(.white)
+                            .scaleEffect(isAnimating ? 1.0 : 0.6)
+                            .opacity(isAnimating ? 1 : 0)
+                            .offset(y: isAnimating ? 0 : 30)
+
+                        Text("What's the move tonight!")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.white.opacity(0.92))
+                            .opacity(isAnimating ? 1 : 0)
+                            .offset(y: isAnimating ? 0 : 20)
                     }
+                    .animation(.spring(response: 0.9, dampingFraction: 0.68).delay(0.4), value: isAnimating)
+
+                    Spacer()
+                } else {
+                    Spacer(minLength: 24)
                 }
-
-                VStack(spacing: 8) {
-                    Text("WTM")
-                        .font(.system(.largeTitle, design: .default, weight: .black))
-                        .foregroundStyle(.white)
-                        .scaleEffect(isAnimating ? (collapsedHeader ? 0.78 : 1.0) : 0.6)
-                        .opacity(isAnimating ? 1 : 0)
-                        .offset(y: isAnimating ? (collapsedHeader ? -10 : 0) : 30)
-
-                    Text("What's the move tn!")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white.opacity(0.92))
-                        .opacity(isAnimating ? 1 : 0)
-                        .offset(y: isAnimating ? (collapsedHeader ? -8 : 0) : 20)
-                }
-                .offset(y: collapsedHeader ? -50 : 0)
-                .animation(.spring(response: 0.9, dampingFraction: 0.68).delay(0.4), value: isAnimating)
-                .animation(.spring(response: 0.6, dampingFraction: 0.85), value: collapsedHeader)
-
-                Spacer()
 
                 VStack(spacing: 14) {
                     VStack(spacing: 6) {
@@ -177,6 +162,39 @@ struct WelcomeScreen: View {
                 .animation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.8), value: isAnimating)
             }
         }
+        .onAppear {
+            withAnimation {
+                isAnimating = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
+                spinComplete = true
+                isAnimating = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isAnimating = true
+                }
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            if step != .chooseMode {
+                Button {
+                    goBack()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                            .font(.headline)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.white.opacity(0.18))
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+                }
+                .padding(.leading, 16)
+                .padding(.top, 12)
+            }
+        }
         .overlay {
             if showConfetti {
                 ConfettiView()
@@ -190,13 +208,13 @@ struct WelcomeScreen: View {
             switch step {
             case .chooseMode:
                 HStack(spacing: 12) {
-                    actionPill("Sign In", filled: true) {
+                    actionPill("Sign In", icon: "person.fill", filled: true) {
                         mode = .signIn
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             step = .chooseMethod
                         }
                     }
-                    actionPill("Sign Up", filled: false) {
+                    actionPill("Sign Up", icon: "person.badge.plus", filled: false) {
                         mode = .signUp
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             step = .chooseMethod
@@ -205,13 +223,13 @@ struct WelcomeScreen: View {
                 }
             case .chooseMethod:
                 HStack(spacing: 12) {
-                    actionPill("Email", filled: true) {
+                    actionPill("Email", icon: "envelope.fill", filled: true) {
                         method = .email
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             step = .email
                         }
                     }
-                    actionPill("Phone", filled: false) {
+                    actionPill("Phone", icon: "phone.fill", filled: false) {
                         method = .phone
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             step = .phone
@@ -219,54 +237,77 @@ struct WelcomeScreen: View {
                     }
                 }
             case .email:
-                TextField("Email", text: $email)
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
-                    .autocorrectionDisabled(true)
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                onboardingField(
+                    "Email",
+                    text: $email,
+                    icon: "envelope.fill",
+                    field: .email,
+                    keyboardType: .emailAddress,
+                    textInputAutocapitalization: .never,
+                    disableAutocorrection: true
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             case .password:
-                SecureField("Password", text: $password)
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                onboardingField(
+                    "Password",
+                    text: $password,
+                    icon: "lock.fill",
+                    field: .password,
+                    isSecure: true
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             case .username:
-                TextField("Username", text: $username)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled(true)
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                onboardingField(
+                    "Username",
+                    text: $username,
+                    icon: "at",
+                    field: .username,
+                    textInputAutocapitalization: .never,
+                    disableAutocorrection: true
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             case .phone:
-                TextField("Phone (e.g. +15551234567)", text: $phone)
-                    .keyboardType(.phonePad)
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                onboardingField(
+                    "Phone (e.g. +15551234567)",
+                    text: $phone,
+                    icon: "phone.fill",
+                    field: .phone,
+                    keyboardType: .phonePad
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             case .otp:
-                TextField("6-digit code", text: $otp)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                onboardingField(
+                    "6-digit code",
+                    text: $otp,
+                    icon: "number",
+                    field: .otp,
+                    keyboardType: .numberPad
+                )
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
         }
         .animation(.spring(response: 0.55, dampingFraction: 0.85), value: step)
+        .onChange(of: step) { newStep in
+            switch newStep {
+            case .email:
+                focusedField = .email
+            case .password:
+                focusedField = .password
+            case .username:
+                focusedField = .username
+            case .phone:
+                focusedField = .phone
+            case .otp:
+                focusedField = .otp
+            default:
+                focusedField = nil
+            }
+        }
     }
 
     @ViewBuilder
     private var controls: some View {
         HStack(spacing: 12) {
-            if step != .chooseMode {
-                Button {
-                    goBack()
-                } label: {
-                    Text("Back")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(.white.opacity(0.22))
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-            }
-
             if step != .chooseMode {
                 Button {
                     Task { await primaryAction() }
@@ -275,6 +316,7 @@ struct WelcomeScreen: View {
                         if isLoading {
                             ProgressView()
                         }
+                        Image(systemName: primaryButtonIcon)
                         Text(primaryButtonTitle)
                             .font(.headline)
                     }
@@ -289,10 +331,13 @@ struct WelcomeScreen: View {
         }
     }
 
-    private func actionPill(_ title: String, filled: Bool, action: @escaping () -> Void) -> some View {
+    private func actionPill(_ title: String, icon: String, filled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title)
-                .font(.headline)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                Text(title)
+            }
+            .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(.white.opacity(0.18))
@@ -303,6 +348,50 @@ struct WelcomeScreen: View {
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
+    }
+
+    @ViewBuilder
+    private func onboardingField(
+        _ placeholder: String,
+        text: Binding<String>,
+        icon: String,
+        field: InputField,
+        isSecure: Bool = false,
+        keyboardType: UIKeyboardType = .default,
+        textInputAutocapitalization: TextInputAutocapitalization? = .sentences,
+        disableAutocorrection: Bool = false
+    ) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.8))
+                .frame(width: 20)
+
+            Group {
+                if isSecure {
+                    SecureField(placeholder, text: text)
+                } else {
+                    TextField(placeholder, text: text)
+                }
+            }
+            .foregroundStyle(.white)
+            .tint(.white)
+            .textInputAutocapitalization(textInputAutocapitalization)
+            .autocorrectionDisabled(disableAutocorrection)
+            .keyboardType(keyboardType)
+            .focused($focusedField, equals: field)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 13)
+        .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(
+                    focusedField == field ? .white.opacity(0.95) : .white.opacity(0.35),
+                    lineWidth: focusedField == field ? 1.6 : 1.0
+                )
+        )
+        .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
     }
 
     private var canProceed: Bool {
@@ -332,6 +421,20 @@ struct WelcomeScreen: View {
                 return mode == .signUp ? "Create Account" : "Sign In"
             }
             return "Next"
+        }
+    }
+
+    private var primaryButtonIcon: String {
+        switch step {
+        case .chooseMode, .chooseMethod:
+            return "arrow.right.circle.fill"
+        case .otp:
+            return "checkmark.seal.fill"
+        default:
+            if step == lastStep {
+                return mode == .signUp ? "person.crop.circle.badge.plus" : "person.crop.circle.fill"
+            }
+            return "arrow.right"
         }
     }
 

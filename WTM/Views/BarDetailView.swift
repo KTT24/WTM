@@ -7,176 +7,259 @@
 
 import SwiftUI
 import MapKit
-import Supabase
 
 struct BarDetailView: View {
-    
     let bar: Bars
-    
+
+    @EnvironmentObject private var dataStore: AppDataStore
+
     @State private var currentPeopleCount: Int
     @State private var currentHypeScore: Int
     @State private var region: MKCoordinateRegion
-    
-    private let headerGradient: LinearGradient
-    
-    @State private var errorMessage: String?   // for showing update failures (optional)
-    
+    @State private var errorMessage: String?
+    @State private var isUpdating = false
+
     init(bar: Bars) {
         self.bar = bar
-        
-        // Safely unwrap optionals with sensible defaults
-        self._currentPeopleCount = State(initialValue: bar.people_count ?? 0)
-        self._currentHypeScore    = State(initialValue: bar.hype_score    ?? 5)
-        
-        // Map region – fallback if coordinate is nil
-        let center = bar.coordinate ?? CLLocationCoordinate2D(latitude: 33.5779, longitude: -101.8552)
+        self._currentPeopleCount = State(initialValue: bar.people_count)
+        self._currentHypeScore = State(initialValue: bar.hype_score)
+
+        let center = bar.coordinate
         self._region = State(initialValue: MKCoordinateRegion(
             center: center,
             span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
         ))
-        
-        let palettes: [[Color]] = [
-            [.blue.opacity(0.85), .purple.opacity(0.65)],
-            [.mint.opacity(0.85), .blue.opacity(0.7)],
-            [.orange.opacity(0.85), .pink.opacity(0.65)],
-            [.indigo.opacity(0.85), .teal.opacity(0.65)],
-            [.cyan.opacity(0.85), .purple.opacity(0.6)]
-        ]
-        let colors = palettes.randomElement() ?? [.blue.opacity(0.85), .purple.opacity(0.65)]
-        self.headerGradient = LinearGradient(
-            colors: colors,
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
-    
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // Header
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(bar.name)
-                        .font(.largeTitle.bold())
-                        .foregroundStyle(headerGradient)
-                    
-                    HStack {
-                        Text("Hype: \(currentHypeScore)/10")
-                            .font(.title3.bold())
-                            .foregroundStyle(.primary)
-                        
-                        Spacer()
-                        
-                        Text("\(currentPeopleCount) people here")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }.padding(10)
-                
-                
-                // Check-in / Check-out buttons
-                HStack(spacing: 12) {
-                    Button {
-                        Task { await updateCounts(delta: 1) }
-                    } label: {
-                        Label("I'm here rn", systemImage: "person.fill.checkmark")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(.blue)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    
-                    Button {
-                        Task { await updateCounts(delta: -1) }
-                    } label: {
-                        Label("I just left", systemImage: "person.fill.xmark")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(.red)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                }.padding(10)
-                
-                let desc = bar.description
-                // Description
-                if !desc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("About")
-                            .font(.headline)
-                        Text(desc)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                    }
+        ZStack {
+//            AnimatedMeshBackground()
+//                .blur(radius: 28)
+//                .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 14) {
+                    headerCard
+                    actionCard
+                    mapCard
+                    detailsCard
                 }
-                let addr = bar.address
-                // Address
-                if !addr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Address")
-                            .font(.headline)
-                        Text(addr)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                
-                
-                
-                // Optional error message
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .padding(.top, 8)
-                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 18)
             }
-            .padding()
         }
         .navigationTitle(bar.name)
         .navigationBarTitleDisplayMode(.inline)
     }
-    
-    private var hypeColor: Color {
-        switch currentHypeScore {
-        case 8...10: return .yellow
-        case 5..<8:  return .blue
-        default:     return .gray
+
+    private var headerCard: some View {
+        DetailGlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(bar.name)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
+
+                HStack(spacing: 10) {
+                    DetailStatPill(
+                        title: "Hype",
+                        value: "\(currentHypeScore)/10",
+                        tint: hypeTintColor
+                    )
+
+                    DetailStatPill(
+                        title: "Here Now",
+                        value: "\(currentPeopleCount)",
+                        tint: .cyan
+                    )
+
+                    DetailStatPill(
+                        title: "Popularity",
+                        value: "\(bar.popularity)",
+                        tint: .orange
+                    )
+                }
+            }
         }
     }
-    
-    // Updates both people_count and hype_score in Supabase
+
+    private var actionCard: some View {
+        DetailGlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Update Crowd")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.95))
+
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await updateCounts(delta: 1) }
+                    } label: {
+                        ActionButtonLabel(
+                            title: "I'm here",
+                            icon: "person.fill.checkmark",
+                            tint: .blue
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isUpdating)
+
+                    Button {
+                        Task { await updateCounts(delta: -1) }
+                    } label: {
+                        ActionButtonLabel(
+                            title: "I left",
+                            icon: "person.fill.xmark",
+                            tint: .red
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isUpdating)
+                }
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red.opacity(0.95))
+                }
+            }
+        }
+    }
+
+    private var mapCard: some View {
+        DetailGlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Location")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.95))
+
+                Map(coordinateRegion: .constant(region), interactionModes: [])
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(.white.opacity(0.2), lineWidth: 1)
+                )
+            }
+        }
+    }
+
+    private var detailsCard: some View {
+        DetailGlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                if !bar.description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("About")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.95))
+                        Text(bar.description)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.78))
+                    }
+                }
+
+                if !bar.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Address")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.95))
+                        Text(bar.address)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.78))
+                    }
+                }
+            }
+        }
+    }
+
+    private var hypeTintColor: Color {
+        if currentHypeScore >= 7 { return .orange }
+        if currentHypeScore >= 5 { return .yellow }
+        return .green
+    }
+
     private func updateCounts(delta: Int) async {
-        let barId = bar.id
-        
+        guard !isUpdating else { return }
+        isUpdating = true
+        defer { isUpdating = false }
+
         do {
             let newPeople = max(0, currentPeopleCount + delta)
-            
-            // Simple hype formula — feel free to change this logic
-            // Example: hype = min(10, people / 4)   → every 4 people = +1 hype
             let newHype = min(10, newPeople / 4)
-            
-            try await supabase
-                .from("bars")
-                .update([
-                    "people_count": newPeople,
-                    "hype_score":   newHype
-                ])
-                .eq("id", value: barId)           // ← change "id" if your PK column has different name
-                .execute()
-            
+
+            let updatedBar = bar.updating(peopleCount: newPeople, hypeScore: newHype)
+            try await dataStore.recordVisit(for: updatedBar)
+
             await MainActor.run {
                 currentPeopleCount = newPeople
-                currentHypeScore   = newHype
-                errorMessage       = nil
+                currentHypeScore = newHype
+                errorMessage = nil
             }
-            
-            print("Success → People: \(newPeople), Hype: \(newHype)")
         } catch {
-            print("Update failed:", error.localizedDescription)
             await MainActor.run {
                 errorMessage = "Failed to update: \(error.localizedDescription)"
             }
         }
+    }
+}
+
+private struct DetailGlassCard<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content
+        }
+        .padding(14)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.22), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
+    }
+}
+
+private struct DetailStatPill: View {
+    let title: String
+    let value: String
+    let tint: Color
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Text(value)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.white)
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.white.opacity(0.72))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(tint.opacity(0.24), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(.white.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+private struct ActionButtonLabel: View {
+    let title: String
+    let icon: String
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(tint.opacity(0.35), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.white.opacity(0.22), lineWidth: 1)
+        )
     }
 }

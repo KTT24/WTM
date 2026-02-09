@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WTM | Join</title>
+    <meta
+      name="description"
+      content="Join WTM to get early access and updates about launch, cities, and feature drops."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+      <div class="grain"></div>
+    </div>
+
+    <header class="nav-shell reveal">
+      <a class="brand brand-link" href="./index.html">
+        <div class="brand-mark"></div>
+        <div>
+          <p class="brand-top">WTM</p>
+          <p class="brand-bottom">What's The Move</p>
+        </div>
+      </a>
+      <nav class="nav-actions">
+        <a href="./index.html">Home</a>
+        <a href="./features.html">Features</a>
+        <a href="./experience.html">Experience</a>
+        <a class="active" href="./join.html">Join</a>
+      </nav>
+    </header>
+
+    <main class="page-layout">
+      <section class="page-hero reveal">
+        <p class="kicker">Join WTM</p>
+        <h1>Get early access before your city peaks.</h1>
+        <p class="hero-copy">
+          Sign up for launch access and product updates. Be first in when WTM opens your area.
+        </p>
+      </section>
+
+      <section class="join-grid reveal">
+        <article class="join-form-panel">
+          <h2>Waitlist signup</h2>
+          <p>Drop your details and we will notify you first.</p>
+          <form class="join-form">
+            <label>
+              Full Name
+              <input type="text" name="name" placeholder="Alex Carter" />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" placeholder="alex@email.com" />
+            </label>
+            <label>
+              City
+              <input type="text" name="city" placeholder="Austin, TX" />
+            </label>
+            <button type="submit" class="btn btn-primary">Join Waitlist</button>
+          </form>
+        </article>
+
+        <aside class="join-benefits">
+          <article class="feature-panel">
+            <p class="feature-tag">Early Access</p>
+            <h3>Get in before public launch</h3>
+            <p>Priority invite and first access to map pulse and live events.</p>
+          </article>
+          <article class="feature-panel">
+            <p class="feature-tag">Insider Updates</p>
+            <h3>Know what is shipping</h3>
+            <p>Receive launch city updates and product improvements first.</p>
+          </article>
+          <article class="feature-panel">
+            <p class="feature-tag">Founding Users</p>
+            <h3>Help shape WTM</h3>
+            <p>Feedback from early members directly guides roadmap decisions.</p>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

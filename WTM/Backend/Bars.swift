@@ -7,11 +7,10 @@
 
 
 import Foundation
-import Supabase
 import MapKit
 import SwiftUI
 
-struct Bars: Identifiable,  Decodable, Encodable {
+struct Bars: Identifiable, Decodable, Encodable, Equatable {
     let id: UUID
     let name: String
     let latitude: Double
@@ -36,5 +35,18 @@ struct Bars: Identifiable,  Decodable, Encodable {
             return .red
         }
     }
-}
 
+    func updating(peopleCount: Int? = nil, hypeScore: Int? = nil) -> Bars {
+        Bars(
+            id: id,
+            name: name,
+            latitude: latitude,
+            longitude: longitude,
+            description: description,
+            address: address,
+            popularity: popularity,
+            people_count: peopleCount ?? people_count,
+            hype_score: hypeScore ?? hype_score
+        )
+    }
+}
