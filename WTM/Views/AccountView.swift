@@ -7,6 +7,7 @@ import SwiftUI
 
 struct AccountView: View {
     @EnvironmentObject private var dataStore: AppDataStore
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("minHypeToShow") private var minHypeToShow: Int = 0
     @AppStorage("accountAccentColor") private var accountAccentColorRaw: String = AccountAccentOption.cyan.rawValue
 
@@ -50,6 +51,9 @@ struct AccountView: View {
                 )
                 .blur(radius: 30)
                 .ignoresSafeArea()
+                Color.black
+                    .opacity(AdaptiveTheme.backgroundScrimOpacity(for: colorScheme))
+                    .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
@@ -200,6 +204,7 @@ struct AccountView: View {
 }
 
 private struct GlassCard<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -207,16 +212,17 @@ private struct GlassCard<Content: View>: View {
             content
         }
         .padding(14)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(AdaptiveTheme.cardFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.white.opacity(0.22), lineWidth: 1)
+                .stroke(AdaptiveTheme.cardStroke(for: colorScheme), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.22), radius: 12, x: 0, y: 6)
     }
 }
 
 private struct AccountStatPill: View {
+    @Environment(\.colorScheme) private var colorScheme
     let title: String
     let value: String
 
@@ -231,15 +237,16 @@ private struct AccountStatPill: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .background(AdaptiveTheme.controlFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(.white.opacity(0.22), lineWidth: 1)
+                .stroke(AdaptiveTheme.controlStroke(for: colorScheme), lineWidth: 1)
         )
     }
 }
 
 private struct VisitedBarRow: View {
+    @Environment(\.colorScheme) private var colorScheme
     let bar: Bars
 
     var body: some View {
@@ -280,10 +287,10 @@ private struct VisitedBarRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 9)
-        .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(AdaptiveTheme.controlFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(.white.opacity(0.18), lineWidth: 1)
+                .stroke(AdaptiveTheme.controlStroke(for: colorScheme), lineWidth: 1)
         )
     }
 }

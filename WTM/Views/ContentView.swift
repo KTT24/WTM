@@ -60,6 +60,7 @@ struct ContentView: View {
 
 private struct CustomTabBar: View {
     @Binding var selectedTab: ContentView.Tab
+    @Environment(\.colorScheme) private var colorScheme
     let addAction: () -> Void
 
     var body: some View {
@@ -72,10 +73,17 @@ private struct CustomTabBar: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 16)
-        .background(.ultraThinMaterial)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(Color.black.opacity(colorScheme == .dark ? 0.22 : 0.34))
+                )
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.32), lineWidth: 1)
+                .stroke(AdaptiveTheme.cardStroke(for: colorScheme), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: .black.opacity(0.16), radius: 14, x: 0, y: 8)
@@ -121,7 +129,7 @@ private struct CustomTabBar: View {
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
             }
-            .foregroundStyle(isSelected ? .white : .white.opacity(0.72))
+            .foregroundStyle(isSelected ? .white : .white.opacity(colorScheme == .dark ? 0.72 : 0.86))
             .frame(maxWidth: .infinity)
             .frame(height: 56)
         }
@@ -131,6 +139,7 @@ private struct CustomTabBar: View {
 
 private struct UpcomingEventsView: View {
     @EnvironmentObject private var dataStore: AppDataStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedEvent: Event?
     @State private var showAddEvent = false
     @State private var leaderboardWindow: LeaderboardWindow = .week
@@ -148,6 +157,9 @@ private struct UpcomingEventsView: View {
             ZStack {
                 AnimatedMeshBackground()
                     .blur(radius: 30)
+                    .ignoresSafeArea()
+                Color.black
+                    .opacity(AdaptiveTheme.backgroundScrimOpacity(for: colorScheme))
                     .ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
@@ -493,6 +505,7 @@ private struct EventsSectionHeader: View {
 }
 
 private struct EventsGlassCard<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -500,10 +513,10 @@ private struct EventsGlassCard<Content: View>: View {
             content
         }
         .padding(14)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(AdaptiveTheme.cardFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.white.opacity(0.22), lineWidth: 1)
+                .stroke(AdaptiveTheme.cardStroke(for: colorScheme), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.22), radius: 12, x: 0, y: 6)
     }
@@ -1330,6 +1343,7 @@ private struct ChatHeader: View {
     let thread: ChatThread
     let onBack: () -> Void
     let onInfo: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 12) {
@@ -1363,7 +1377,7 @@ private struct ChatHeader: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 10)
-        .background(.ultraThinMaterial.opacity(0.45))
+        .background(AdaptiveTheme.chromeFill(for: colorScheme))
     }
 }
 
@@ -1402,6 +1416,7 @@ private struct ChatComposer: View {
     @Binding var messageText: String
     var isFocused: FocusState<Bool>.Binding
     let onSend: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     private var canSend: Bool {
         !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -1441,7 +1456,7 @@ private struct ChatComposer: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(.ultraThinMaterial.opacity(0.45))
+        .background(AdaptiveTheme.chromeFill(for: colorScheme))
     }
 }
 
@@ -1454,6 +1469,7 @@ struct AddEventView: View {
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var dataStore: AppDataStore
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var title = ""
     @State private var date = Date()
@@ -1470,6 +1486,9 @@ struct AddEventView: View {
     var body: some View {
         ZStack {
             AnimatedMeshBackground()
+                .ignoresSafeArea()
+            Color.black
+                .opacity(AdaptiveTheme.backgroundScrimOpacity(for: colorScheme))
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {

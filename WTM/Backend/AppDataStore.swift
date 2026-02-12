@@ -26,6 +26,7 @@ final class AppDataStore: ObservableObject {
     @Published private(set) var leaderboardError: String?
 
     private let userBarService = UserBarService()
+    private let internetBarService = InternetBarService()
     private let eventLeaderboardService = EventLeaderboardService()
     private let notificationManager = NotificationManager.shared
     private let defaults: UserDefaults
@@ -144,17 +145,34 @@ final class AppDataStore: ObservableObject {
         }
     }
 
-    func recordVisit(for bar: Bars) async throws {
-        try await userBarService.updateUserBars(mode: "visit", bar: bar)
-        merge(bar, into: &visitedBars)
-        if nearbyBars.contains(where: { $0.id == bar.id }) {
-            merge(bar, into: &nearbyBars)
+    func recordVisit(for bar: Bars) async throws -> Bars {
+        let resolved = await internetBarService.enrich(bar)
+        try await userBarService.updateUserBars(mode: "visit", bar: resolved)
+        merge(resolved, into: &visitedBars)
+        if nearbyBars.contains(where: { $0.id == resolved.id }) {
+            merge(resolved, into: &nearbyBars)
         }
+        return resolved
     }
 
-    func recordNearby(_ bar: Bars, distanceMeters: Double? = nil) async throws {
-        try await userBarService.updateUserBars(mode: "nearby", bar: bar, distanceMeters: distanceMeters)
-        merge(bar, into: &nearbyBars)
+    func recordNearby(_ bar: Bars, distanceMeters: Double? = nil) async throws -> Bars {
+        let resolved = await internetBarService.enrich(bar)
+        try await userBarService.updateUserBars(mode: "nearby", bar: resolved, distanceMeters: distanceMeters)
+        merge(resolved, into: &nearbyBars)
+        return resolved
+    }
+
+    func resolveBarDetails(for bar: Bars) async -> Bars {
+        let resolved = await internetBarService.enrich(bar)
+        if nearbyBars.contains(where: { $0.id == resolved.id }) {
+            merge(resolved, into: &nearbyBars)
+            try? await userBarService.updateUserBars(mode: "nearby", bar: resolved)
+        }
+        if visitedBars.contains(where: { $0.id == resolved.id }) {
+            merge(resolved, into: &visitedBars)
+            try? await userBarService.updateUserBars(mode: "visit", bar: resolved)
+        }
+        return resolved
     }
 
     func updateLocalBars(_ bars: [LocalBar]) {

@@ -7,6 +7,8 @@ import SwiftUI
 import Supabase
 
 struct WelcomeScreen: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     private enum InputField {
         case email
         case password
@@ -87,6 +89,9 @@ struct WelcomeScreen: View {
     var body: some View {
         ZStack {
             AnimatedMeshBackground()
+            Color.black
+                .opacity(AdaptiveTheme.backgroundScrimOpacity(for: colorScheme))
+                .ignoresSafeArea()
 
             VStack(spacing: 22) {
                 if step == .chooseMode {

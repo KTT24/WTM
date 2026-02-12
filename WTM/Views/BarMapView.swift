@@ -242,9 +242,9 @@ struct BarsMapView: View {
         }
 
         do {
-            try await dataStore.recordNearby(created, distanceMeters: distance)
+            let resolved = try await dataStore.recordNearby(created, distanceMeters: distance)
             await MainActor.run {
-                selectedBar = created
+                selectedBar = resolved
                 locationMessage = nil
             }
         } catch {

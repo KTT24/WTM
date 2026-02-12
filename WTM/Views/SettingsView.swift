@@ -355,6 +355,7 @@ struct SettingsView: View {
 }
 
 private struct GlassSection<Content: View>: View {
+    @Environment(\.colorScheme) private var colorScheme
     let title: String
     @ViewBuilder let content: Content
 
@@ -367,16 +368,17 @@ private struct GlassSection<Content: View>: View {
             content
         }
         .padding(14)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(AdaptiveTheme.cardFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.white.opacity(0.24), lineWidth: 1)
+                .stroke(AdaptiveTheme.cardStroke(for: colorScheme), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 6)
     }
 }
 
 private struct SettingsActionLabel: View {
+    @Environment(\.colorScheme) private var colorScheme
     let title: String
     let icon: String
 
@@ -394,10 +396,10 @@ private struct SettingsActionLabel: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 12)
         .padding(.vertical, 11)
-        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(AdaptiveTheme.controlFill(for: colorScheme), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(.white.opacity(0.22), lineWidth: 1)
+                .stroke(AdaptiveTheme.controlStroke(for: colorScheme), lineWidth: 1)
         )
     }
 }

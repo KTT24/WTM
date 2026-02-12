@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kutter Thornton | Developer Portfolio</title>
+    <meta
+      name="description"
+      content="Developer portfolio and skills site for Kutter Thornton, styled with the WTM visual language."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+      <div class="grain"></div>
+    </div>
+
+    <header class="nav-shell reveal">
+      <a class="brand-link" href="#home">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <div>
+            <p class="brand-top">KT.DEV</p>
+            <p class="brand-bottom">Developer Portfolio</p>
+          </div>
+        </div>
+      </a>
+      <nav class="nav-actions" aria-label="Primary">
+        <a href="#skills">Skills</a>
+        <a href="#projects">Projects</a>
+        <a href="#experience">Experience</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="portfolio-layout">
+      <section class="hero reveal" id="home">
+        <p class="kicker">Full-Stack Developer</p>
+        <h1>Building polished products from app idea to production.</h1>
+        <p class="hero-copy">
+          I design and ship fast, scalable software with strong UX and clean architecture.
+          This site highlights my technical stack, project work, and what I can build next.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#projects">View Projects</a>
+          <a class="btn btn-secondary" href="#contact">Work With Me</a>
+        </div>
+        <div class="hero-metrics">
+          <article class="metric glass-panel">
+            <p class="metric-label">Products Shipped</p>
+            <p class="metric-value">14+</p>
+          </article>
+          <article class="metric glass-panel">
+            <p class="metric-label">Primary Focus</p>
+            <p class="metric-value">iOS + Web</p>
+          </article>
+          <article class="metric glass-panel">
+            <p class="metric-label">Availability</p>
+            <p class="metric-value status-badge">Open to Projects</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="stack reveal">
+        <article class="glass-panel intro-card">
+          <p class="section-tag">About</p>
+          <h2>Engineering with speed, clarity, and product intuition.</h2>
+          <p>
+            I combine front-end craft with backend reliability to deliver apps that
+            are fast, stable, and easy for teams to maintain.
+          </p>
+        </article>
+        <article class="glass-panel toolbox-card">
+          <p class="section-tag">Toolbox</p>
+          <ul class="chip-list">
+            <li>SwiftUI</li>
+            <li>TypeScript</li>
+            <li>Node.js</li>
+            <li>Supabase</li>
+            <li>PostgreSQL</li>
+            <li>REST APIs</li>
+            <li>CI/CD</li>
+            <li>Figma to Code</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="glass-panel section reveal" id="skills">
+        <div class="section-head">
+          <p class="section-tag">Skills</p>
+          <h3>Core technical strengths</h3>
+        </div>
+        <div class="skills-grid">
+          <article class="skill-card">
+            <h4>Front-End</h4>
+            <div class="skill-meter">
+              <p>SwiftUI</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 94%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>React / Next.js</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 88%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>Animation + UX</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 90%"></span></div>
+            </div>
+          </article>
+          <article class="skill-card">
+            <h4>Back-End</h4>
+            <div class="skill-meter">
+              <p>TypeScript APIs</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 86%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>Database Design</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 84%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>Authentication + Security</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 81%"></span></div>
+            </div>
+          </article>
+          <article class="skill-card">
+            <h4>Product Delivery</h4>
+            <div class="skill-meter">
+              <p>System Architecture</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 89%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>Performance Tuning</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 85%"></span></div>
+            </div>
+            <div class="skill-meter">
+              <p>Testing + QA</p>
+              <div class="meter-track"><span class="meter-fill" style="--level: 80%"></span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="glass-panel section reveal" id="projects">
+        <div class="section-head">
+          <p class="section-tag">Projects</p>
+          <h3>Featured builds</h3>
+        </div>
+        <div class="projects-grid">
+          <article class="project-card">
+            <p class="project-kicker">Mobile Platform</p>
+            <h4>WTM Nightlife Discovery App</h4>
+            <p>
+              Real-time social discovery app using SwiftUI, Supabase, and event intelligence.
+            </p>
+            <ul class="chip-list">
+              <li>SwiftUI</li>
+              <li>Supabase</li>
+              <li>Location APIs</li>
+            </ul>
+          </article>
+          <article class="project-card">
+            <p class="project-kicker">Web Product</p>
+            <h4>Marketing + Conversion Stack</h4>
+            <p>
+              Multi-page product site focused on motion, storytelling, and high-intent signup flow.
+            </p>
+            <ul class="chip-list">
+              <li>HTML/CSS/JS</li>
+              <li>Performance</li>
+              <li>SEO</li>
+            </ul>
+          </article>
+          <article class="project-card">
+            <p class="project-kicker">Internal Tools</p>
+            <h4>Ops Dashboard & Alerts</h4>
+            <p>
+              Metrics and incident views for product teams with automated notifications and reporting.
+            </p>
+            <ul class="chip-list">
+              <li>TypeScript</li>
+              <li>Postgres</li>
+              <li>Automation</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="glass-panel section reveal" id="experience">
+        <div class="section-head">
+          <p class="section-tag">Experience</p>
+          <h3>How I work</h3>
+        </div>
+        <div class="timeline">
+          <article>
+            <p class="timeline-role">Lead Product Engineer</p>
+            <p class="timeline-meta">2024 - Present</p>
+            <p>Shipped cross-platform features, stabilized data pipelines, and improved release velocity.</p>
+          </article>
+          <article>
+            <p class="timeline-role">Freelance Developer</p>
+            <p class="timeline-meta">2022 - 2024</p>
+            <p>Built client apps end-to-end from product scoping through deployment and monitoring.</p>
+          </article>
+          <article>
+            <p class="timeline-role">Software Builder</p>
+            <p class="timeline-meta">Ongoing</p>
+            <p>Focused on practical software that solves real problems with clear user outcomes.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="contact reveal" id="contact">
+        <article class="glass-panel contact-panel">
+          <p class="section-tag">Contact</p>
+          <h3>Let’s build something sharp.</h3>
+          <p>
+            For product builds, feature development, or engineering partnerships, reach out:
+          </p>
+          <a class="btn btn-primary" href="mailto:hello@kutterthornton.dev">hello@kutterthornton.dev</a>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer reveal">
+      <p>© <span id="year"></span> Kutter Thornton. Crafted with the WTM style system.</p>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
