@@ -282,17 +282,7 @@ struct BarsMapView: View {
     }
 
     private func openDebugBarDetail() {
-        selectedBar = Bars(
-            id: UUID(uuidString: "11111111-2222-3333-4444-555555555555") ?? UUID(),
-            name: "Dummy Night Spot",
-            latitude: 33.5779,
-            longitude: -101.8552,
-            description: "Debug-only bar data used to validate BarDetailView layout and actions.",
-            address: "123 Debug Ave, Lubbock, TX",
-            popularity: 88,
-            people_count: 36,
-            hype_score: 8
-        )
+        // TODO: Add an updated debug menu
     }
 }
 

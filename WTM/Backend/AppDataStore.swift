@@ -13,6 +13,7 @@ final class AppDataStore: ObservableObject {
     @Published private(set) var visitedBars: [Bars] = []
     @Published private(set) var localBars: [LocalBar] = []
     @Published private(set) var events: [Event] = []
+    @Published private(set) var friends: [FriendProfile] = []
     @Published private(set) var goingEventIDs: Set<Int>
     @Published private(set) var weeklyLeaderboard: [EventLeaderboardEntry] = []
     @Published private(set) var monthlyLeaderboard: [EventLeaderboardEntry] = []
@@ -26,6 +27,7 @@ final class AppDataStore: ObservableObject {
     @Published private(set) var leaderboardError: String?
 
     private let userBarService = UserBarService()
+    private let friendService = FriendService()
     private let internetBarService = InternetBarService()
     private let eventLeaderboardService = EventLeaderboardService()
     private let notificationManager = NotificationManager.shared
@@ -69,13 +71,19 @@ final class AppDataStore: ObservableObject {
         self.defaults = defaults
         let rawIDs = defaults.array(forKey: Self.goingEventsKey) as? [Int] ?? []
         self.goingEventIDs = Set(rawIDs)
+        self.friends = friendService.loadFriends()
     }
 
     func preloadIfNeeded() async {
+        loadFriends()
         async let _ = loadBars()
         async let _ = loadEvents()
         async let _ = loadLeaderboards()
         _ = await ()
+    }
+
+    func loadFriends() {
+        friends = friendService.loadFriends()
     }
 
     func clearBars() {
@@ -94,6 +102,28 @@ final class AppDataStore: ObservableObject {
         monthlyLeaderboard.removeAll()
         lastEventsFetch = nil
         lastLeaderboardFetch = nil
+    }
+
+    func venueParticipants(for snapshot: VenueSnapshot) -> [VenueParticipant] {
+        friendService.participants(for: snapshot, friends: friends)
+    }
+
+    func addFriend(from participant: VenueParticipant) {
+        do {
+            let updated = try friendService.addFriend(from: participant, existingFriends: friends)
+            friends.append(updated)
+        } catch {
+            // The UI handles persistence failures by keeping the current state visible.
+        }
+    }
+
+    func removeFriend(id: UUID) {
+        do {
+            try friendService.removeFriend(id: id, existingFriends: friends)
+            friends.removeAll { $0.id == id }
+        } catch {
+            // Keep the current list if persistence fails.
+        }
     }
 
     func isGoing(to event: Event) -> Bool {

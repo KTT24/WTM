@@ -128,6 +128,8 @@ private struct CustomTabBar: View {
                     .font(.system(size: 16, weight: .semibold))
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .foregroundStyle(isSelected ? .white : .white.opacity(colorScheme == .dark ? 0.72 : 0.86))
             .frame(maxWidth: .infinity)
@@ -523,9 +525,26 @@ private struct EventsGlassCard<Content: View>: View {
 }
 
 private struct ChatsView: View {
+    private enum Section: String, CaseIterable, Identifiable {
+        case rooms
+        case friends
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .rooms:
+                return "Bar & Event Chats"
+            case .friends:
+                return "Friends"
+            }
+        }
+    }
+
     @EnvironmentObject private var dataStore: AppDataStore
     @AppStorage("pinnedChatThreadIDs") private var pinnedChatThreadIDsRaw: String = ""
     @State private var selectedChat: ChatThread?
+    @State private var selectedSection: Section = .rooms
     @StateObject private var locationManager = LocationManager()
 
     private var closestLocalBars: [LocalBar] {
@@ -586,8 +605,12 @@ private struct ChatsView: View {
         }
     }
 
+    private var friendThreads: [ChatThread] {
+        dataStore.friends.map { ChatThread.direct(friend: $0) }
+    }
+
     private var allUniqueThreads: [ChatThread] {
-        dedupeThreads(eventThreads + closestBarThreads + visitedBarThreads)
+        dedupeThreads(eventThreads + friendThreads + closestBarThreads + visitedBarThreads)
     }
 
     private var pinnedThreads: [ChatThread] {
@@ -606,6 +629,43 @@ private struct ChatsView: View {
 
     private var unpinnedVisitedBarThreads: [ChatThread] {
         visitedBarThreads.filter { !pinnedThreadIDs.contains($0.id) }
+    }
+
+    private var unpinnedFriendThreads: [ChatThread] {
+        friendThreads.filter { !pinnedThreadIDs.contains($0.id) }
+    }
+
+    private func iconName(for thread: ChatThread) -> String {
+        switch thread.kind {
+        case .event:
+            return "bolt.fill"
+        case .bar:
+            return "wineglass.fill"
+        case .direct:
+            return "person.crop.circle.fill"
+        }
+    }
+
+    private func tint(for thread: ChatThread) -> Color {
+        switch thread.kind {
+        case .event:
+            return .orange
+        case .bar:
+            return .blue
+        case .direct:
+            return .mint
+        }
+    }
+
+    private func badgeText(for thread: ChatThread) -> String? {
+        switch thread.kind {
+        case .event:
+            return "Live"
+        case .bar:
+            return nil
+        case .direct:
+            return "DM"
+        }
     }
 
     private func dedupeThreads(_ threads: [ChatThread]) -> [ChatThread] {
@@ -641,127 +701,31 @@ private struct ChatsView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 14) {
+                        chatsSectionSwitcher
+
                         EventsGlassCard {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Conversations")
+                                Text(selectedSection == .rooms ? "Conversations" : "Friends")
                                     .font(.headline.weight(.semibold))
                                     .foregroundStyle(.white.opacity(0.95))
 
                                 HStack(spacing: 10) {
-                                    EventSummaryPill(title: "Event", value: "\(dataStore.goingEvents.count)", tint: .orange)
-                                    EventSummaryPill(title: "Nearby", value: "\(closestLocalBars.count)", tint: .cyan)
-                                    EventSummaryPill(title: "Saved", value: "\(sortedVisitedBars.count)", tint: .white)
+                                    if selectedSection == .rooms {
+                                        EventSummaryPill(title: "Event", value: "\(dataStore.goingEvents.count)", tint: .orange)
+                                        EventSummaryPill(title: "Nearby", value: "\(closestLocalBars.count)", tint: .cyan)
+                                        EventSummaryPill(title: "Saved", value: "\(sortedVisitedBars.count)", tint: .white)
+                                    } else {
+                                        EventSummaryPill(title: "Friends", value: "\(dataStore.friends.count)", tint: .mint)
+                                        EventSummaryPill(title: "DMs", value: "\(dataStore.friends.count)", tint: .white)
+                                    }
                                 }
                             }
                         }
 
-                        if (dataStore.isLoadingBars || dataStore.isLoadingEvents) && dataStore.nearbyBars.isEmpty && dataStore.events.isEmpty {
-                            EventsGlassCard {
-                                HStack(spacing: 10) {
-                                    ProgressView()
-                                    Text("Loading chats...")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.white.opacity(0.8))
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        } else if allUniqueThreads.isEmpty {
-                            EventsGlassCard {
-                                VStack(spacing: 10) {
-                                    Image(systemName: "bubble.left.and.bubble.right")
-                                        .font(.system(size: 34))
-                                        .foregroundStyle(.white.opacity(0.85))
-                                    Text("No Chats Yet")
-                                        .font(.headline.weight(.semibold))
-                                        .foregroundStyle(.white)
-                                    Text("Join an event or open a nearby bar to start chatting.")
-                                        .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.72))
-                                        .multilineTextAlignment(.center)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                            }
+                        if selectedSection == .rooms {
+                            roomsContent
                         } else {
-                            if !pinnedThreads.isEmpty {
-                                ChatSectionHeader(title: "Pinned Chats", subtitle: "Your favorites")
-                                ForEach(pinnedThreads) { thread in
-                                    ChatThreadCard(
-                                        icon: thread.kind == .event ? "bolt.fill" : "wineglass.fill",
-                                        tint: thread.kind == .event ? .orange : .blue,
-                                        title: thread.title,
-                                        subtitle: thread.subtitle,
-                                        badge: thread.kind == .event ? "Live" : nil,
-                                        isPinned: true,
-                                        onTogglePin: { togglePin(thread) },
-                                        onTap: { selectedChat = thread }
-                                    )
-                                }
-                            }
-
-                            ChatSectionHeader(title: "Event Chats", subtitle: "Events you are going to")
-                            if unpinnedEventThreads.isEmpty {
-                                EventsGlassCard {
-                                    Text(eventThreads.isEmpty
-                                        ? "Tap \"I'm Going\" on an event to add its chat here."
-                                        : "All event chats are pinned above.")
-                                        .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.72))
-                                }
-                            } else {
-                                ForEach(unpinnedEventThreads) { thread in
-                                    ChatThreadCard(
-                                        icon: "bolt.fill",
-                                        tint: .orange,
-                                        title: thread.title,
-                                        subtitle: thread.subtitle,
-                                        badge: "Live",
-                                        isPinned: false,
-                                        onTogglePin: { togglePin(thread) },
-                                        onTap: { selectedChat = thread }
-                                    )
-                                }
-                            }
-
-                            ChatSectionHeader(title: "Closest Bars", subtitle: "Open a room nearby")
-                            if unpinnedClosestBarThreads.isEmpty {
-                                EventsGlassCard {
-                                    Text(closestBarThreads.isEmpty
-                                        ? "Turn on location to see the closest bars."
-                                        : "All nearby bar chats are pinned above.")
-                                        .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.72))
-                                }
-                            } else {
-                                ForEach(unpinnedClosestBarThreads) { thread in
-                                    ChatThreadCard(
-                                        icon: "wineglass.fill",
-                                        tint: .blue,
-                                        title: thread.title,
-                                        subtitle: thread.subtitle,
-                                        badge: nil,
-                                        isPinned: false,
-                                        onTogglePin: { togglePin(thread) },
-                                        onTap: { selectedChat = thread }
-                                    )
-                                }
-                            }
-
-                            if !unpinnedVisitedBarThreads.isEmpty {
-                                ChatSectionHeader(title: "Visited Bars", subtitle: "Your saved bar chats")
-                                ForEach(unpinnedVisitedBarThreads) { thread in
-                                    ChatThreadCard(
-                                        icon: "wineglass.fill",
-                                        tint: .blue,
-                                        title: thread.title,
-                                        subtitle: thread.subtitle,
-                                        badge: nil,
-                                        isPinned: false,
-                                        onTogglePin: { togglePin(thread) },
-                                        onTap: { selectedChat = thread }
-                                    )
-                                }
-                            }
+                            friendsContent
                         }
 
                         if let errorMessage = dataStore.barsError ?? dataStore.eventsError {
@@ -786,6 +750,7 @@ private struct ChatsView: View {
             .navigationTitle("Chats")
             .navigationBarTitleDisplayMode(.inline)
             .task {
+                dataStore.loadFriends()
                 async let _ = dataStore.loadBars()
                 async let _ = dataStore.loadEvents()
                 _ = await ()
@@ -793,11 +758,284 @@ private struct ChatsView: View {
                 locationManager.requestLocation()
             }
             .fullScreenCover(item: $selectedChat) { thread in
-                ChatRoomView(thread: thread)
+                ChatRoomView(
+                    thread: thread,
+                    onOpenDirectMessage: { friend in
+                        selectedChat = ChatThread.direct(friend: friend)
+                    }
+                )
             }
         }
     }
 
+    private var chatsSectionSwitcher: some View {
+        HStack(spacing: 10) {
+            ForEach(Section.allCases) { section in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedSection = section
+                    }
+                } label: {
+                    Text(section.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(selectedSection == section ? .white : .white.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            selectedSection == section
+                                ? Color.white.opacity(0.16)
+                                : Color.white.opacity(0.08),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(.white.opacity(selectedSection == section ? 0.22 : 0.12), lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var roomsContent: some View {
+        Group {
+            if (dataStore.isLoadingBars || dataStore.isLoadingEvents) && dataStore.nearbyBars.isEmpty && dataStore.events.isEmpty {
+                EventsGlassCard {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Loading chats...")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else if allUniqueThreads.isEmpty {
+                EventsGlassCard {
+                    VStack(spacing: 10) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.system(size: 34))
+                            .foregroundStyle(.white.opacity(0.85))
+                        Text("No Chats Yet")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white)
+                        Text("Join an event, open a nearby bar, or add a friend to start chatting.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.72))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                }
+            } else {
+                if !pinnedThreads.isEmpty {
+                    ChatSectionHeader(title: "Pinned Chats", subtitle: "Your favorites")
+                    ForEach(pinnedThreads) { thread in
+                        ChatThreadCard(
+                            icon: iconName(for: thread),
+                            tint: tint(for: thread),
+                            title: thread.title,
+                            subtitle: thread.subtitle,
+                            badge: badgeText(for: thread),
+                            isPinned: true,
+                            onTogglePin: { togglePin(thread) },
+                            onTap: { selectedChat = thread }
+                        )
+                    }
+                }
+
+                ChatSectionHeader(title: "Friends", subtitle: "People you can message later")
+                if unpinnedFriendThreads.isEmpty {
+                    EventsGlassCard {
+                        Text(friendThreads.isEmpty
+                            ? "Add someone from a bar or party to turn them into a DM."
+                            : "All friend chats are pinned above.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.72))
+                    }
+                } else {
+                    ForEach(unpinnedFriendThreads) { thread in
+                        ChatThreadCard(
+                            icon: iconName(for: thread),
+                            tint: tint(for: thread),
+                            title: thread.title,
+                            subtitle: thread.subtitle,
+                            badge: badgeText(for: thread),
+                            isPinned: false,
+                            onTogglePin: { togglePin(thread) },
+                            onTap: { selectedChat = thread }
+                        )
+                    }
+                }
+
+                ChatSectionHeader(title: "Event Chats", subtitle: "Events you are going to")
+                if unpinnedEventThreads.isEmpty {
+                    EventsGlassCard {
+                        Text(eventThreads.isEmpty
+                            ? "Tap \"I'm Going\" on an event to add its chat here."
+                            : "All event chats are pinned above.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.72))
+                    }
+                } else {
+                    ForEach(unpinnedEventThreads) { thread in
+                        ChatThreadCard(
+                            icon: iconName(for: thread),
+                            tint: tint(for: thread),
+                            title: thread.title,
+                            subtitle: thread.subtitle,
+                            badge: badgeText(for: thread),
+                            isPinned: false,
+                            onTogglePin: { togglePin(thread) },
+                            onTap: { selectedChat = thread }
+                        )
+                    }
+                }
+
+                ChatSectionHeader(title: "Closest Bars", subtitle: "Open a room nearby")
+                if unpinnedClosestBarThreads.isEmpty {
+                    EventsGlassCard {
+                        Text(closestBarThreads.isEmpty
+                            ? "Turn on location to see the closest bars."
+                            : "All nearby bar chats are pinned above.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.72))
+                    }
+                } else {
+                    ForEach(unpinnedClosestBarThreads) { thread in
+                        ChatThreadCard(
+                            icon: iconName(for: thread),
+                            tint: tint(for: thread),
+                            title: thread.title,
+                            subtitle: thread.subtitle,
+                            badge: badgeText(for: thread),
+                            isPinned: false,
+                            onTogglePin: { togglePin(thread) },
+                            onTap: { selectedChat = thread }
+                        )
+                    }
+                }
+
+                if !unpinnedVisitedBarThreads.isEmpty {
+                    ChatSectionHeader(title: "Visited Bars", subtitle: "Your saved bar chats")
+                    ForEach(unpinnedVisitedBarThreads) { thread in
+                        ChatThreadCard(
+                            icon: iconName(for: thread),
+                            tint: tint(for: thread),
+                            title: thread.title,
+                            subtitle: thread.subtitle,
+                            badge: badgeText(for: thread),
+                            isPinned: false,
+                            onTogglePin: { togglePin(thread) },
+                            onTap: { selectedChat = thread }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private var friendsContent: some View {
+        Group {
+            EventsGlassCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Friends")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.95))
+
+                    HStack(spacing: 10) {
+                        EventSummaryPill(title: "Total", value: "\(dataStore.friends.count)", tint: .mint)
+                        EventSummaryPill(title: "Active", value: "\(dataStore.friends.filter { !$0.currentHangout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }.count)", tint: .cyan)
+                    }
+                }
+            }
+
+            if dataStore.friends.isEmpty {
+                EventsGlassCard {
+                    VStack(spacing: 10) {
+                        Image(systemName: "person.2.slash")
+                            .font(.system(size: 34))
+                            .foregroundStyle(.white.opacity(0.85))
+                        Text("No Friends Yet")
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white)
+                        Text("Open a venue chat, tap Add Friend, and your people will show up here.")
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.72))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                }
+            } else {
+                ForEach(dataStore.friends.sorted { lhs, rhs in
+                    if lhs.addedAt != rhs.addedAt { return lhs.addedAt > rhs.addedAt }
+                    return lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
+                }) { friend in
+                    FriendRowCard(
+                        friend: friend,
+                        onMessage: {
+                            selectedChat = ChatThread.direct(friend: friend)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct FriendRowCard: View {
+    let friend: FriendProfile
+    let onMessage: () -> Void
+
+    var body: some View {
+        EventsGlassCard {
+            HStack(spacing: 12) {
+                Circle()
+                    .fill(Color.mint.opacity(0.24))
+                    .frame(width: 42, height: 42)
+                    .overlay(
+                        Text(friend.initials)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white)
+                    )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(friend.displayName)
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(.white)
+                        Text(friend.username)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+
+                    Text(friend.conversationSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.72))
+                        .lineLimit(1)
+
+                    HStack(spacing: 8) {
+                        Label(friend.currentHangoutKind.friendlyName, systemImage: "mappin.and.ellipse")
+                        Label("\(friend.mutualFriends) mutual", systemImage: "person.2")
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.68))
+                }
+
+                Spacer()
+
+                Button(action: onMessage) {
+                    Text("Message")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 9)
+                        .background(Color.mint.opacity(0.86), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
 }
 
 private struct ChatSectionHeader: View {
@@ -886,7 +1124,7 @@ private struct ChatThreadCard: View {
 }
 
 private struct ChatThread: Identifiable {
-    enum Kind { case bar, event }
+    enum Kind { case bar, event, direct }
     let id: String
     let kind: Kind
     let title: String
@@ -899,24 +1137,62 @@ private struct ChatThread: Identifiable {
     static func event(id: Int, title: String, subtitle: String) -> ChatThread {
         ChatThread(id: "event-\(id)", kind: .event, title: title, subtitle: subtitle)
     }
+
+    static func direct(friend: FriendProfile) -> ChatThread {
+        ChatThread(
+            id: "friend-\(friend.id.uuidString)",
+            kind: .direct,
+            title: friend.displayName,
+            subtitle: friend.conversationSubtitle
+        )
+    }
+
+    var venueKind: VenueKind? {
+        switch kind {
+        case .bar:
+            return .bar
+        case .event:
+            return .event
+        case .direct:
+            return nil
+        }
+    }
 }
 
 private struct ChatRoomView: View {
     let thread: ChatThread
+    let onOpenDirectMessage: (FriendProfile) -> Void
 
-    @State private var messageText = ""
+    @EnvironmentObject private var dataStore: AppDataStore
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isComposerFocused: Bool
+    @State private var messageText = ""
     @State private var showChatInfo = false
+    @State private var messages: [ChatMessage]
 
-    @State private var messages: [ChatMessage] = [
-        ChatMessage(user: "Ava", text: "Pulling up in 10. Who’s already there?", isMe: false),
-        ChatMessage(user: "You", text: "I’m on the way now.", isMe: true),
-        ChatMessage(user: "Miles", text: "Table by the patio is open.", isMe: false),
-        ChatMessage(user: "Jules", text: "Let’s do a round of shots when everyone’s here.", isMe: false),
-        ChatMessage(user: "You", text: "Bet. I’ll grab a pitcher too.", isMe: true),
-        ChatMessage(user: "Nova", text: "ETA 5 min 🚗", isMe: false)
-    ]
+    init(thread: ChatThread, onOpenDirectMessage: @escaping (FriendProfile) -> Void) {
+        self.thread = thread
+        self.onOpenDirectMessage = onOpenDirectMessage
+        _messages = State(initialValue: Self.seedMessages(for: thread))
+    }
+
+    private var venueSnapshot: VenueSnapshot? {
+        guard let kind = thread.venueKind else { return nil }
+        return VenueSnapshot(identifier: thread.id, title: thread.title, subtitle: thread.subtitle, kind: kind)
+    }
+
+    private var venueParticipants: [VenueParticipant] {
+        guard let venueSnapshot else { return [] }
+        return dataStore.venueParticipants(for: venueSnapshot)
+    }
+
+    private func friendProfile(for participant: VenueParticipant) -> FriendProfile? {
+        dataStore.friends.first { friend in
+            friend.id == participant.friendID ||
+            friend.username.caseInsensitiveCompare(participant.username) == .orderedSame ||
+            friend.displayName.caseInsensitiveCompare(participant.displayName) == .orderedSame
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -933,7 +1209,7 @@ private struct ChatRoomView: View {
                     endRadius: 420
                 )
             )
-                .ignoresSafeArea()
+            .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 ChatHeader(
@@ -941,6 +1217,26 @@ private struct ChatRoomView: View {
                     onBack: { dismiss() },
                     onInfo: { showChatInfo = true }
                 )
+
+                if !venueParticipants.isEmpty {
+                    PeopleHereStrip(
+                        participants: venueParticipants,
+                        onAddFriend: { participant in
+                            dataStore.addFriend(from: participant)
+                        },
+                        onMessage: { participant in
+                            if let friend = friendProfile(for: participant) {
+                                onOpenDirectMessage(friend)
+                            } else {
+                                dataStore.addFriend(from: participant)
+                                if let friend = friendProfile(for: participant) {
+                                    onOpenDirectMessage(friend)
+                                }
+                            }
+                        }
+                    )
+                    .padding(.bottom, 8)
+                }
 
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: false) {
@@ -966,7 +1262,18 @@ private struct ChatRoomView: View {
             }
         }
         .sheet(isPresented: $showChatInfo) {
-            ChatInfoSheet(thread: thread)
+            ChatInfoSheet(
+                thread: thread,
+                participants: venueParticipants,
+                onAddFriend: { participant in
+                    dataStore.addFriend(from: participant)
+                },
+                onMessageParticipant: { participant in
+                    if let friend = friendProfile(for: participant) {
+                        onOpenDirectMessage(friend)
+                    }
+                }
+            )
         }
     }
 
@@ -982,6 +1289,27 @@ private struct ChatRoomView: View {
             withAnimation(.easeOut(duration: 0.2)) {
                 proxy.scrollTo(last.id, anchor: .bottom)
             }
+        }
+    }
+
+    private static func seedMessages(for thread: ChatThread) -> [ChatMessage] {
+        switch thread.kind {
+        case .direct:
+            return [
+                ChatMessage(user: thread.title, text: "You made it out tonight?", isMe: false),
+                ChatMessage(user: "You", text: "Yep — just got here.", isMe: true),
+                ChatMessage(user: thread.title, text: "Perfect. Save me a drink when you can.", isMe: false),
+                ChatMessage(user: "You", text: "Bet, sending you a pic in a sec.", isMe: true)
+            ]
+        case .bar, .event:
+            return [
+                ChatMessage(user: "Ava", text: "Pulling up in 10. Who’s already there?", isMe: false),
+                ChatMessage(user: "You", text: "I’m on the way now.", isMe: true),
+                ChatMessage(user: "Miles", text: "Table by the patio is open.", isMe: false),
+                ChatMessage(user: "Jules", text: "Let’s do a round of shots when everyone’s here.", isMe: false),
+                ChatMessage(user: "You", text: "Bet. I’ll grab a pitcher too.", isMe: true),
+                ChatMessage(user: "Nova", text: "ETA 5 min 🚗", isMe: false)
+            ]
         }
     }
 }
@@ -1367,7 +1695,7 @@ private struct ChatHeader: View {
             Spacer()
 
             Button(action: onInfo) {
-                Image(systemName: "sparkles")
+                Image(systemName: thread.kind == .direct ? "person.fill" : "person.2.fill")
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.8))
                     .padding(8)
@@ -1383,6 +1711,9 @@ private struct ChatHeader: View {
 
 private struct ChatInfoSheet: View {
     let thread: ChatThread
+    let participants: [VenueParticipant]
+    let onAddFriend: (VenueParticipant) -> Void
+    let onMessageParticipant: (VenueParticipant) -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -1391,24 +1722,205 @@ private struct ChatInfoSheet: View {
                 .frame(width: 44, height: 5)
                 .padding(.top, 8)
 
-            Text(thread.title)
-                .font(.title2.bold())
-            Text(thread.subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 6) {
+                Text(thread.title)
+                    .font(.title2.bold())
+                Text(thread.subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(thread.kind == .direct ? "Friend" : "People Here")
+                        .font(.headline.weight(.semibold))
+                    Spacer()
+                    Text("\(max(participants.count, thread.kind == .direct ? 1 : 0))")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                if thread.kind == .direct {
+                    Text("You’re already in a direct thread with this friend.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if participants.isEmpty {
+                    Text("No one is visible here right now.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 10) {
+                            ForEach(participants) { participant in
+                                ParticipantRow(
+                                    participant: participant,
+                                    onAddFriend: {
+                                        onAddFriend(participant)
+                                    },
+                                    onMessage: {
+                                        if participant.isFriend {
+                                            onMessageParticipant(participant)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 280)
+                }
+            }
 
             VStack(spacing: 10) {
                 Label("Notifications On", systemImage: "bell.badge")
-                Label("Participants: 6", systemImage: "person.2.fill")
+                Label(thread.kind == .direct ? "1-on-1 Chat" : "Venue Chat", systemImage: "person.2.fill")
                 Label("Share Invite", systemImage: "square.and.arrow.up")
             }
             .font(.subheadline)
 
-            Spacer()
+            Spacer(minLength: 0)
         }
         .padding(20)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         .presentationCornerRadius(24)
+    }
+}
+
+private struct PeopleHereStrip: View {
+    let participants: [VenueParticipant]
+    let onAddFriend: (VenueParticipant) -> Void
+    let onMessage: (VenueParticipant) -> Void
+
+    var body: some View {
+        EventsGlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("People Here")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Text("\(participants.count)")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(participants.prefix(6)) { participant in
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(participant.isFriend ? Color.mint.opacity(0.32) : Color.white.opacity(0.16))
+                                        .frame(width: 34, height: 34)
+                                        .overlay(
+                                            Text(participant.initials)
+                                                .font(.caption.weight(.bold))
+                                                .foregroundStyle(.white)
+                                        )
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(participant.displayName)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.white)
+                                            .lineLimit(1)
+                                        Text(participant.username)
+                                            .font(.caption2)
+                                            .foregroundStyle(.white.opacity(0.66))
+                                    }
+                                }
+
+                                Text(participant.summary)
+                                    .font(.caption2)
+                                    .foregroundStyle(.white.opacity(0.68))
+                                    .lineLimit(2)
+
+                                Button {
+                                    if participant.isFriend {
+                                        onMessage(participant)
+                                    } else {
+                                        onAddFriend(participant)
+                                    }
+                                } label: {
+                                    Text(participant.isFriend ? "Message" : "Add Friend")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            participant.isFriend ? Color.mint.opacity(0.28) : Color.white.opacity(0.12),
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(10)
+                            .frame(width: 168, alignment: .leading)
+                            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(.white.opacity(0.12), lineWidth: 1)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+    }
+}
+
+private struct ParticipantRow: View {
+    let participant: VenueParticipant
+    let onAddFriend: () -> Void
+    let onMessage: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(participant.isFriend ? Color.mint.opacity(0.32) : Color.white.opacity(0.16))
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Text(participant.initials)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 8) {
+                    Text(participant.displayName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    if participant.isFriend {
+                        Text("Friend")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.green)
+                    }
+                }
+                Text(participant.summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Button {
+                if participant.isFriend {
+                    onMessage()
+                } else {
+                    onAddFriend()
+                }
+            } label: {
+                Text(participant.isFriend ? "Message" : "Add")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(participant.isFriend ? Color.mint.opacity(0.86) : Color.blue.opacity(0.86), in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(Color.black.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

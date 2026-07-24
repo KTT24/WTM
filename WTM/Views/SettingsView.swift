@@ -125,100 +125,116 @@ struct SettingsView: View {
                                 accountAccentPicker
                             }
                         }
-
-                        GlassSection(title: "Debug") {
-                            VStack(spacing: 10) {
-                                Button {
-                                    eventPredictionCoordinator.injectDebugSuggestion()
-                                } label: {
-                                    SettingsActionLabel(
-                                        title: "Inject Fake Party Suggestion",
-                                        icon: "sparkles"
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    Task { await dataStore.insertFakeEvents(count: 5) }
-                                } label: {
-                                    SettingsActionLabel(
-                                        title: "Add 5 Fake Parties",
-                                        icon: "party.popper.fill"
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    Task {
-                                        let sent = await NotificationManager.shared.sendDebugTestNotification()
-                                        await MainActor.run {
-                                            notificationMessage = sent
-                                                ? "Test notification queued."
-                                                : "Notifications are blocked in iOS Settings."
-                                        }
-                                    }
-                                } label: {
-                                    SettingsActionLabel(
-                                        title: "Send Test Notification",
-                                        icon: "bell.and.waves.left.and.right.fill"
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                Button {
-                                    isLoggedIn = false
-                                } label: {
-                                    SettingsActionLabel(
-                                        title: "Show Onboarding Again",
-                                        icon: "arrow.counterclockwise"
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Set Debug Location (lat, lon)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.white.opacity(0.78))
-
-                                    TextField("e.g. 33.5779, -101.8552", text: $debugLocationInput)
-                                        .textInputAutocapitalization(.never)
-                                        .autocorrectionDisabled(true)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 10)
-                                        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(.white.opacity(0.25), lineWidth: 1)
-                                        )
-
-                                    HStack(spacing: 10) {
-                                        Button("Apply") {
-                                            applyDebugLocation()
-                                        }
-                                        .buttonStyle(.borderedProminent)
-
-                                        Button("Clear") {
-                                            DebugLocationStore.clearOverride()
-                                            debugLocationMessage = "Debug location cleared."
-                                        }
-                                        .buttonStyle(.bordered)
-                                    }
-
-                                    if let current = DebugLocationStore.currentOverride() {
-                                        Text("Current: \(current.coordinate.latitude), \(current.coordinate.longitude)")
-                                            .font(.caption)
-                                            .foregroundStyle(.white.opacity(0.7))
-                                    }
-
-                                    if let debugLocationMessage {
-                                        Text(debugLocationMessage)
-                                            .font(.caption)
-                                            .foregroundStyle(.white.opacity(0.7))
-                                    }
-                                }
-                                .padding(.top, 4)
-                            }
+                        
+                        Button {
+                            eventPredictionCoordinator.injectDebugSuggestion()
+                        } label: {
+                            SettingsActionLabel(
+                                title: "Enable Degbug Mode",
+                                icon: "ladybug.fill"
+                            )
                         }
+                        .buttonStyle(.plain)
+
+                        // =========================================
+                        //
+                        //       TODO: Rewite the debug menu
+                        //
+                        // ========================================
+//                        GlassSection(title: "Debug") {
+//                            VStack(spacing: 10) {
+//                                Button {
+//                                    eventPredictionCoordinator.injectDebugSuggestion()
+//                                } label: {
+//                                    SettingsActionLabel(
+//                                        title: "Inject Fake Party Suggestion",
+//                                        icon: "sparkles"
+//                                    )
+//                                }
+//                                .buttonStyle(.plain)
+//                                
+//
+//                                Button {
+//                                    Task { await dataStore.insertFakeEvents(count: 5) }
+//                                } label: {
+//                                    SettingsActionLabel(
+//                                        title: "Add 5 Fake Parties",
+//                                        icon: "party.popper.fill"
+//                                    )
+//                                }
+//                                .buttonStyle(.plain)
+//
+//                                Button {
+//                                    Task {
+//                                        let sent = await NotificationManager.shared.sendDebugTestNotification()
+//                                        await MainActor.run {
+//                                            notificationMessage = sent
+//                                                ? "Test notification queued."
+//                                                : "Notifications are blocked in iOS Settings."
+//                                        }
+//                                    }
+//                                } label: {
+//                                    SettingsActionLabel(
+//                                        title: "Send Test Notification",
+//                                        icon: "bell.and.waves.left.and.right.fill"
+//                                    )
+//                                }
+//                                .buttonStyle(.plain)
+//
+//                                Button {
+//                                    isLoggedIn = false
+//                                } label: {
+//                                    SettingsActionLabel(
+//                                        title: "Show Onboarding Again",
+//                                        icon: "arrow.counterclockwise"
+//                                    )
+//                                }
+//                                .buttonStyle(.plain)
+//
+//                                VStack(alignment: .leading, spacing: 8) {
+//                                    Text("Set Debug Location (lat, lon)")
+//                                        .font(.subheadline)
+//                                        .foregroundStyle(.white.opacity(0.78))
+//
+//                                    TextField("e.g. 33.5779, -101.8552", text: $debugLocationInput)
+//                                        .textInputAutocapitalization(.never)
+//                                        .autocorrectionDisabled(true)
+//                                        .padding(.horizontal, 12)
+//                                        .padding(.vertical, 10)
+//                                        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+//                                        .overlay(
+//                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+//                                                .stroke(.white.opacity(0.25), lineWidth: 1)
+//                                        )
+//
+//                                    HStack(spacing: 10) {
+//                                        Button("Apply") {
+//                                            applyDebugLocation()
+//                                        }
+//                                        .buttonStyle(.borderedProminent)
+//
+//                                        Button("Clear") {
+//                                            DebugLocationStore.clearOverride()
+//                                            debugLocationMessage = "Debug location cleared."
+//                                        }
+//                                        .buttonStyle(.bordered)
+//                                    }
+//
+//                                    if let current = DebugLocationStore.currentOverride() {
+//                                        Text("Current: \(current.coordinate.latitude), \(current.coordinate.longitude)")
+//                                            .font(.caption)
+//                                            .foregroundStyle(.white.opacity(0.7))
+//                                    }
+//
+//                                    if let debugLocationMessage {
+//                                        Text(debugLocationMessage)
+//                                            .font(.caption)
+//                                            .foregroundStyle(.white.opacity(0.7))
+//                                    }
+//                                }
+//                                .padding(.top, 4)
+//                            }
+//                        }
 
                         GlassSection(title: "Storage") {
                             Button(role: .destructive) {
@@ -311,45 +327,45 @@ struct SettingsView: View {
 
     private var accountAccentPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Account Accent Color")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.86))
+//            Text("Account Accent Color")
+//                .font(.subheadline.weight(.semibold))
+//                .foregroundStyle(.white.opacity(0.86))
 
-            HStack(spacing: 10) {
-                ForEach(AccountAccentOption.allCases) { option in
-                    Button {
-                        accountAccentColorRaw = option.rawValue
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [option.accentColor, option.secondaryColor],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 30, height: 30)
-
-                            if selectedAccentOption == option {
-                                Image(systemName: "checkmark")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(.white)
-                            }
-                        }
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    selectedAccentOption == option ? .white.opacity(0.95) : .white.opacity(0.28),
-                                    lineWidth: selectedAccentOption == option ? 2 : 1
-                                )
-                        )
-                        .shadow(color: .black.opacity(0.25), radius: 5, x: 0, y: 2)
-                        .accessibilityLabel(option.title)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+//            HStack(spacing: 10) {
+//                ForEach(AccountAccentOption.allCases) { option in
+//                    Button {
+//                        accountAccentColorRaw = option.rawValue
+//                    } label: {
+//                        ZStack {
+//                            Circle()
+//                                .fill(
+//                                    LinearGradient(
+//                                        colors: [option.accentColor, option.secondaryColor],
+//                                        startPoint: .topLeading,
+//                                        endPoint: .bottomTrailing
+//                                    )
+//                                )
+//                                .frame(width: 30, height: 30)
+//
+//                            if selectedAccentOption == option {
+//                                Image(systemName: "checkmark")
+//                                    .font(.caption.weight(.bold))
+//                                    .foregroundStyle(.white)
+//                            }
+//                        }
+//                        .overlay(
+//                            Circle()
+//                                .stroke(
+//                                    selectedAccentOption == option ? .white.opacity(0.95) : .white.opacity(0.28),
+//                                    lineWidth: selectedAccentOption == option ? 2 : 1
+//                                )
+//                        )
+//                        .shadow(color: .black.opacity(0.25), radius: 5, x: 0, y: 2)
+//                        .accessibilityLabel(option.title)
+//                    }
+//                    .buttonStyle(.plain)
+//                }
+//            }
         }
     }
 }

@@ -9,7 +9,6 @@ import SwiftData
 
 @main
 struct WTMApp: App {
-    @AppStorage("isLoggedIn") private var isLoggedIn = false
     @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var eventPredictionCoordinator = EventPredictionCoordinator()
@@ -18,40 +17,16 @@ struct WTMApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if isLoggedIn {
-                    ContentView()
-                } else {
-                    WelcomeScreen()
+            ContentView()
+                .environmentObject(eventPredictionCoordinator)
+                .environmentObject(appDataStore)
+                .partySuggestionAlert(using: eventPredictionCoordinator)
+                .fullScreenCover(isPresented: $showSuggestedEvent) {
+                    AddEventView()
                 }
-            }
-            .environmentObject(eventPredictionCoordinator)
-            .environmentObject(appDataStore)
-            .partySuggestionAlert(using: eventPredictionCoordinator)
-            .fullScreenCover(isPresented: $showSuggestedEvent) {
-                AddEventView()
-            }
-            .onChange(of: scenePhase) { phase in
-                eventPredictionCoordinator.setAppActive(phase == .active)
-            }
-            .onChange(of: isLoggedIn) { loggedIn in
-                if loggedIn {
-                    eventPredictionCoordinator.start()
-                    Task { await appDataStore.preloadIfNeeded() }
-                } else {
-                    eventPredictionCoordinator.stop()
+                .onChange(of: scenePhase) { phase in
+                    eventPredictionCoordinator.setAppActive(phase == .active)
                 }
-            }
-            .task {
-                eventPredictionCoordinator.onCreateEvent = { _ in
-                    showSuggestedEvent = true
-                }
-
-                if isLoggedIn {
-                    eventPredictionCoordinator.start()
-                    await appDataStore.preloadIfNeeded()
-                }
-            }
         }
     }
 }

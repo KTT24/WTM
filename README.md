@@ -9,6 +9,7 @@ Users can discover nearby bars, post events, join event chats, and view weekly/m
 - Nearby bar discovery using Apple Maps + Core Location
 - Event feed with live/upcoming sections
 - "I'm Going" event tracking with chat reminders
+- Friends system with local DMs and venue attendee discovery
 - Weekly and monthly leaderboard cards
 - In-app chat UI for event/bar threads
 - Notification controls for:
@@ -28,7 +29,7 @@ Users can discover nearby bars, post events, join event chats, and view weekly/m
 ## Project Structure
 
 - `WTM/Views/` - App screens and UI components
-- `WTM/Backend/` - Data models, store, services, notifications
+- `WTM/Backend/` - Data models, store, services, notifications, friends
 - `WTM/Event Prediction/` - Presence detection + party suggestion flow
 - `supabase/functions/update_user_bars/` - Edge Function for profile bar updates
 
@@ -88,6 +89,10 @@ WTM expects the following backend resources.
 - `presence_tokens`
 - `presence_sightings`
 - `party_suggestions`
+
+6. Friends data is stored locally on device for now:
+- saved friends appear in the Chats tab as DM threads
+- venue rooms surface current attendees so you can add them as friends
 
 ### Required Edge Function
 

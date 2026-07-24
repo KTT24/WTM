@@ -9,6 +9,8 @@
 		<string>remote-notification</string>
 		<string>location</string>
 		<string>bluetooth-central</string>
+		<string>fetch</string>
+		<string>nearby-interaction</string>
 	</array>
 </dict>
 </plist>
